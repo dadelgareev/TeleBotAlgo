@@ -1,19 +1,31 @@
 import asyncio
 from random import randint
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 import requests
 import json
 
-#Получаем ключ weather api и ключ telegram бота
+# Получаем ключ weather api и ключ telegram бота
 with open("config.json", "r") as f:
     config = json.load(f)
     BOT_TOKEN = config["BOT_KEY"]
     WEATHER_API_KEY = config["WEATHER_API_KEY"]
 
+# Создаем объекты кнопок
+button1 = InlineKeyboardButton(text="Нажми меня!", callback_data="button1")
+button2 = InlineKeyboardButton(text="Другая кнопка", callback_data="button2")
+
+keyboard = [
+    [button1, button2],  # Первый ряд с двумя кнопками
+    [InlineKeyboardButton(text="Ещё одна", callback_data="button3")]  # Второй ряд с одной кнопкой
+]
+reply_markup = InlineKeyboardMarkup(keyboard)
+
+
+
 # Функция стартового сообщения
 async def start(update: Update, context):
-    await update.message.reply_text('Привет! Я тестовый бот. Напиши что-нибудь!')
+    await update.message.reply_text('Привет! Я тестовый бот. Напиши что-нибудь!', reply_markup=reply_markup) # Добавили параметр reply_markup
 
 # Эхо-команда
 async def echo(update: Update, context):
@@ -82,6 +94,18 @@ async def get_weather(update: Update, context):
     except Exception as e:
         await update.message.reply_text(f"Ошибка при получении погоды: {e}")
 
+
+async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()  # Подтверждаем получение callback
+
+    if query.data == "button1":
+        await query.message.reply_text("Вы нажали первую кнопку!")
+    elif query.data == "button2":
+        await query.message.reply_text("Вы нажали вторую кнопку!")
+    elif query.data == "button3":
+        await query.message.reply_text("Вы нажали третью кнопку!")
+
 # Главная функция для запуска бота
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
@@ -90,6 +114,7 @@ def main():
     application.add_handler(CommandHandler("guess", guess_number))
     application.add_handler(CommandHandler("settimer", settimer))
     application.add_handler(CommandHandler("getWeather", get_weather))
+    application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
     application.run_polling()
 
