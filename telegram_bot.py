@@ -1,5 +1,5 @@
 import asyncio
-from random import randint
+from random import randint, choice
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 import requests
@@ -21,6 +21,14 @@ keyboard = [
 ]
 reply_markup = InlineKeyboardMarkup(keyboard)
 
+# Объекты для игры в камень ножницы бумага
+rps_keyboard = InlineKeyboardMarkup([
+    [
+        InlineKeyboardButton("✊ Камень", callback_data="rps_rock"),
+        InlineKeyboardButton("✋ Бумага", callback_data="rps_paper"),
+        InlineKeyboardButton("✌️ Ножницы", callback_data="rps_scissors")
+    ]
+])
 
 
 # Функция стартового сообщения
@@ -94,10 +102,34 @@ async def get_weather(update: Update, context):
     except Exception as e:
         await update.message.reply_text(f"Ошибка при получении погоды: {e}")
 
+async def rps_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Выбери: камень, ножницы или бумага", reply_markup=rps_keyboard)
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()  # Подтверждаем получение callback
+
+    if query.data.startswith("rps_"):
+        user_choice = query.data.replace("rps_", "")
+        bot_choice = choice(["rock", "paper", "scissors"])
+
+        beats = {
+            "rock": "scissors",
+            "scissors": "paper",
+            "paper": "rock"
+        }
+
+        result = ""
+        if user_choice == bot_choice:
+            result = "Ничья!"
+        elif beats[user_choice] == bot_choice:
+            result = "Ты победил!"
+        else:
+            result = "Бот победил!"
+
+        await query.message.reply_text(
+            f"Ты выбрал: {user_choice}\nБот выбрал: {bot_choice}\n\n{result}"
+        )
 
     if query.data == "button1":
         await query.message.reply_text("Вы нажали первую кнопку!")
@@ -105,6 +137,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("Вы нажали вторую кнопку!")
     elif query.data == "button3":
         await query.message.reply_text("Вы нажали третью кнопку!")
+
+
 
 # Главная функция для запуска бота
 def main():
@@ -114,6 +148,7 @@ def main():
     application.add_handler(CommandHandler("guess", guess_number))
     application.add_handler(CommandHandler("settimer", settimer))
     application.add_handler(CommandHandler("getWeather", get_weather))
+    application.add_handler(CommandHandler("rps_game", rps_game))
     application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
     application.run_polling()
