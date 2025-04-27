@@ -1,9 +1,20 @@
 import asyncio
 from random import randint
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import requests
 import json
+
+button1 = InlineKeyboardButton("Кнопка 1", callback_data="button1")
+button2 = InlineKeyboardButton("Кнопка 2", callback_data="button2")
+button_url = InlineKeyboardButton("Ссылка на Путина", url="https://ru.wikipedia.org/wiki/%D0%92%D0%BB%D0%B0%D0%B4%D0%B8%D0%BC%D0%B8%D1%80_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4,_%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F)")
+
+keyboard = InlineKeyboardMarkup([
+    [button1, button2],
+    [button_url],
+    [InlineKeyboardButton("Кнопка 3", callback_data="button3")]
+])
 
 #Получаем ключ weather api и ключ telegram бота
 with open("config.json", "r") as f:
@@ -13,7 +24,7 @@ with open("config.json", "r") as f:
 
 # Функция стартового сообщения
 async def start(update: Update, context):
-    await update.message.reply_text('Привет! Я тестовый бот. Напиши что-нибудь!')
+    await update.message.reply_text('Привет! Я тестовый бот. Напиши что-нибудь!', reply_markup=keyboard)
 
 # Эхо-команда
 async def echo(update: Update, context):
