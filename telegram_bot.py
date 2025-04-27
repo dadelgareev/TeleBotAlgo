@@ -8,7 +8,7 @@ import json
 
 button1 = InlineKeyboardButton("Кнопка 1", callback_data="button1")
 button2 = InlineKeyboardButton("Кнопка 2", callback_data="button2")
-button_url = InlineKeyboardButton("Ссылка на Путина", url="https://ru.wikipedia.org/wiki/%D0%92%D0%BB%D0%B0%D0%B4%D0%B8%D0%BC%D0%B8%D1%80_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4,_%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F)")
+button_url = InlineKeyboardButton("Ссылка на Путина", url="https://ru.wikipedia.org/wiki/%D0%92%D0%BB%D0%B0%D0%B4%D0%B8%D0%BC%D0%B8%D1%80_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4,_%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F)", callback_data="putin")
 
 keyboard = InlineKeyboardMarkup([
     [button1, button2],
@@ -93,6 +93,21 @@ async def get_weather(update: Update, context):
     except Exception as e:
         await update.message.reply_text(f"Ошибка при получении погоды: {e}")
 
+async def button_callback(update: Update, context):
+    query = update.callback_query
+    await query.answer("SOS нажали на кнопку", show_alert=True)
+    user = query.from_user
+    await query.message.reply_text(query.data)
+    if query.data == "button1":
+        await query.message.reply_text(f"Вы нажали на кнопку одын, {user.first_name}")
+    if query.data == "button2":
+        await query.message.reply_text(f"Вы нажали на кнопку двыа, {user.first_name}")
+    if query.data == "button3":
+        await query.message.reply_text(f"Вы нажали на кнопку триада,  {user.first_name}")
+    if query.data == "putin":
+        await query.message.reply_text(f"{user.first_name} успешно проголосал за Путина!")
+
+
 # Главная функция для запуска бота
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
@@ -101,6 +116,7 @@ def main():
     application.add_handler(CommandHandler("guess", guess_number))
     application.add_handler(CommandHandler("settimer", settimer))
     application.add_handler(CommandHandler("getWeather", get_weather))
+    application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
     application.run_polling()
 
