@@ -1,5 +1,8 @@
 import asyncio
+from io import BytesIO
 from random import randint, choice
+
+from PIL import ImageFont, ImageDraw, Image
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 import requests
@@ -139,6 +142,39 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("Вы нажали третью кнопку!")
 
 
+async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) < 2:
+        await update.message.reply_text("Использование: /generate_image <размер> <текст>")
+        return
+
+    try:
+        size = int(context.args[0])
+        text = " ".join(context.args[1:])
+
+        image = Image.new('RGB', (size, size), color=(173, 216, 230))  # Голубой фон
+        draw = ImageDraw.Draw(image)
+
+        try:
+            font = ImageFont.truetype("arial.ttf", size // 10)
+        except:
+            font = ImageFont.load_default()
+        """ центрирование
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        position = ((size - text_width) // 2, (size - text_height) // 2)
+        """
+        draw.text((0,0), text, fill="black", font=font)
+
+        buffer = BytesIO()
+        image.save(buffer, format='PNG')
+        buffer.seek(0)
+
+        await update.message.reply_photo(photo=buffer, caption="Вот ваше изображение!")
+
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка: {e}")
+
 
 # Главная функция для запуска бота
 def main():
@@ -149,6 +185,7 @@ def main():
     application.add_handler(CommandHandler("settimer", settimer))
     application.add_handler(CommandHandler("getWeather", get_weather))
     application.add_handler(CommandHandler("rps_game", rps_game))
+    application.add_handler(CommandHandler("generate_image", generate_image))
     application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
     application.run_polling()
