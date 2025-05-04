@@ -120,13 +120,20 @@ async def button_callback(update: Update, context):
         "rock": "scissor",
         "paper": "rock",
     }
+    emoji_varinats = {
+        "paper": "📜",
+        "rock": "🗿",
+        "scissor": "✂️"
+    }
 
     if bot_choice == user_choice:
-        await query.message.reply_text(f"Бот выбрал: {bot_choice}, это определенно ничья!")
+        await query.message.reply_text(f"Выбор бота-{emoji_varinats.get(bot_choice)},Выбор человека-{emoji_varinats.get(user_choice)}, это определенно ничья!")
     elif win_varinats.get(bot_choice) == user_choice:
-        await query.message.reply_text(f"Бот выйграл: {bot_choice}, - победа за ботом!")
+        await query.message.reply_text(f"Выбор бота-{emoji_varinats.get(bot_choice)},Выбор человека-{emoji_varinats.get(user_choice)} - победа за ботом!")
         print("Выбор бота", bot_choice)
         print("Выбор человека", user_choice)
+    else:
+        await query.message.reply_text(f"Выбор бота-{emoji_varinats.get(bot_choice)},Выбор человека-{emoji_varinats.get(user_choice)}, - победа за кожаным!")
 
     """
     await query.message.reply_text(query.data)
