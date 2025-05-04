@@ -110,8 +110,13 @@ async def play_rpc(update: Update, context):
 
 async def generate_image(update: Update, context: CallbackContext):
     image = Image.new('RGB', (200, 200), color='white')
+    draw = ImageDraw.Draw(image)
+    draw.ellipse((40, 10, 160, 125), outline='black', width = 5)
+
+
     image.save("white_image.jpg")
-    await update.message.reply_text("Изображение создалили и сохранили!")
+    await update.message.reply_photo(open("white_image.jpg", "rb"))
+    #await update.message.reply_text("Изображение создалили и сохранили!")
 
 async def button_callback(update: Update, context):
     query = update.callback_query
