@@ -1,11 +1,14 @@
 import asyncio
+import json
 import random
 from random import randint
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 import requests
-import json
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, CallbackContext
+
+from PIL import Image, ImageDraw
 
 button1 = InlineKeyboardButton("Кнопка 1", callback_data="button1")
 button2 = InlineKeyboardButton("Кнопка 2", callback_data="button2")
@@ -105,6 +108,11 @@ async def get_weather(update: Update, context):
 async def play_rpc(update: Update, context):
     await update.message.reply_text("Начинаем игру в цуэ-фа!", reply_markup=rps_keyboard)
 
+async def generate_image(update: Update, context: CallbackContext):
+    image = Image.new('RGB', (200, 200), color='white')
+    image.save("white_image.jpg")
+    await update.message.reply_text("Изображение создалили и сохранили!")
+
 async def button_callback(update: Update, context):
     query = update.callback_query
     await query.answer("SOS нажали на кнопку")
@@ -158,6 +166,7 @@ def main():
     application.add_handler(CommandHandler("getWeather", get_weather))
     application.add_handler(CallbackQueryHandler(button_callback))
     application.add_handler(CommandHandler("play_rpc", play_rpc))
+    application.add_handler(CommandHandler("generate_image", generate_image))
     print("Бот запущен")
     application.run_polling()
 
