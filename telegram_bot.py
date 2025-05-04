@@ -1,4 +1,5 @@
 import asyncio
+import random
 from random import randint
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
@@ -16,9 +17,9 @@ keyboard = InlineKeyboardMarkup([
     [InlineKeyboardButton("Кнопка 3", callback_data="button3")]
 ])
 
-rock_button = InlineKeyboardButton("🗿", callback_data="rock_button")
-paper_button = InlineKeyboardButton("📜", callback_data="paper_button")
-scissor_button = InlineKeyboardButton("✂️", callback_data="scissor_button")
+rock_button = InlineKeyboardButton("🗿", callback_data="button_rock")
+paper_button = InlineKeyboardButton("📜", callback_data="button_paper")
+scissor_button = InlineKeyboardButton("✂️", callback_data="button_scissor")
 
 rps_keyboard = InlineKeyboardMarkup([
     [rock_button, paper_button],
@@ -108,6 +109,25 @@ async def button_callback(update: Update, context):
     query = update.callback_query
     await query.answer("SOS нажали на кнопку")
     user = query.from_user
+
+    variants = ["paper", "rock", "scissor"]
+    bot_choice = random.choice(variants)
+    user_choice = query.data[7:len(query.data)]
+    #await query.message.reply_text(user_choice)
+
+    win_varinats = {
+        "scissor": "paper",
+        "rock": "scissor",
+        "paper": "rock",
+    }
+
+    if bot_choice == user_choice:
+        await query.message.reply_text(f"Бот выбрал: {bot_choice}, это определенно ничья!")
+    elif win_varinats.get(bot_choice) == user_choice:
+        await query.message.reply_text(f"Бот выйграл: {bot_choice}, - победа за ботом!")
+        print("Выбор бота", bot_choice)
+        print("Выбор человека", user_choice)
+
     """
     await query.message.reply_text(query.data)
     if query.data == "button1":
