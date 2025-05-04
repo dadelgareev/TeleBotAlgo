@@ -16,6 +16,14 @@ keyboard = InlineKeyboardMarkup([
     [InlineKeyboardButton("Кнопка 3", callback_data="button3")]
 ])
 
+rock_button = InlineKeyboardButton("🗿", callback_data="rock_button")
+paper_button = InlineKeyboardButton("📜", callback_data="paper_button")
+scissor_button = InlineKeyboardButton("✂️", callback_data="scissor_button")
+
+rps_keyboard = InlineKeyboardMarkup([
+    [rock_button, paper_button],
+    [scissor_button]
+])
 #Получаем ключ weather api и ключ telegram бота
 with open("config.json", "r") as f:
     config = json.load(f)
@@ -93,19 +101,24 @@ async def get_weather(update: Update, context):
     except Exception as e:
         await update.message.reply_text(f"Ошибка при получении погоды: {e}")
 
+async def play_rpc(update: Update, context):
+    await update.message.reply_text("Начинаем игру в цуэ-фа!", reply_markup=rps_keyboard)
+
 async def button_callback(update: Update, context):
     query = update.callback_query
-    await query.answer("SOS нажали на кнопку", show_alert=True)
+    await query.answer("SOS нажали на кнопку")
     user = query.from_user
+    """
     await query.message.reply_text(query.data)
     if query.data == "button1":
         await query.message.reply_text(f"Вы нажали на кнопку одын, {user.first_name}")
     if query.data == "button2":
-        await query.message.reply_text(f"Вы нажали на кнопку двыа, {user.first_name}")
+        await query.message.reply_text(f"Вы нажали на кнопку двыа 📄, {user.first_name}")
     if query.data == "button3":
         await query.message.reply_text(f"Вы нажали на кнопку триада,  {user.first_name}")
     if query.data == "putin":
         await query.message.reply_text(f"{user.first_name} успешно проголосал за Путина!")
+    """
 
 
 # Главная функция для запуска бота
@@ -117,6 +130,7 @@ def main():
     application.add_handler(CommandHandler("settimer", settimer))
     application.add_handler(CommandHandler("getWeather", get_weather))
     application.add_handler(CallbackQueryHandler(button_callback))
+    application.add_handler(CommandHandler("play_rpc", play_rpc))
     print("Бот запущен")
     application.run_polling()
 
