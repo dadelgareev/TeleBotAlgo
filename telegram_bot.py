@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from io import BytesIO
 from random import randint, choice
 
@@ -8,11 +9,13 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import requests
 import json
 
+
 # Получаем ключ weather api и ключ telegram бота
 with open("config.json", "r") as f:
     config = json.load(f)
     BOT_TOKEN = config["BOT_KEY"]
     WEATHER_API_KEY = config["WEATHER_API_KEY"]
+    RUNWARE_API_KEY = config["RUNWARE_API_KEY"]
 
 # Создаем объекты кнопок
 button1 = InlineKeyboardButton(text="Нажми меня!", callback_data="button1")
@@ -158,12 +161,12 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
             font = ImageFont.truetype("arial.ttf", size // 10)
         except:
             font = ImageFont.load_default()
-        """ центрирование
+
         bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
         position = ((size - text_width) // 2, (size - text_height) // 2)
-        """
+
         draw.text((0,0), text, fill="black", font=font)
 
         buffer = BytesIO()
@@ -175,6 +178,60 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка: {e}")
 
+RUNWARE_API_URL = "https://api.runware.ai/v1"
+
+async def generate_image_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Использование: /generate_image_ai <описание изображения>")
+        return
+
+    try:
+        prompt = " ".join(context.args)
+
+        task_uuid = str(uuid.uuid4())
+
+        payload = [
+            {
+                "taskType": "imageInference",
+                "taskUUID": task_uuid,
+                "positivePrompt": prompt,
+                "model": "civitai:43331@176425",
+                "numberResults": 1,
+                "negativePrompt": "low quality, blurry, distorted",
+                "height": 512,
+                "width": 512,
+                "outputFormat": "PNG",
+                "CFGScale": 7,
+                "steps": 30
+            }
+        ]
+
+        headers = {
+            "Authorization": f"Bearer {RUNWARE_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.post(RUNWARE_API_URL, json=payload, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            if "data" in data:
+                for image in data.get("data", []):
+                    if image.get("taskType") == "imageInference":
+                        image_url = image["imageURL"]
+                        image_response = requests.get(image_url)
+                        if image_response.status_code == 200:
+                            await update.message.reply_photo(
+                                photo=image_response.content,
+                                caption=f"Сгенерировано изображение: {prompt}"
+                            )
+                        else:
+                            await update.message.reply_text(f"Не удалось скачать изображение: {image_response.status_code}")
+            else:
+                await update.message.reply_text(f"Ошибка в ответе API: {data.get('error', 'Неизвестная ошибка')}")
+        else:
+            await update.message.reply_text(f"Ошибка HTTP: {response.status_code}, {response.text}")
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка при генерации изображения: {e}")
 
 # Главная функция для запуска бота
 def main():
@@ -186,6 +243,7 @@ def main():
     application.add_handler(CommandHandler("getWeather", get_weather))
     application.add_handler(CommandHandler("rps_game", rps_game))
     application.add_handler(CommandHandler("generate_image", generate_image))
+    application.add_handler(CommandHandler("generate_image_ai", generate_image_ai))
     application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
     application.run_polling()
