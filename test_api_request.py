@@ -24,4 +24,10 @@ payload = [
 ]
 
 response = requests.post(URL, headers=headers, json=payload)
-print(response.json())
+
+if "data" in response.json():
+    data = response.json().get('data')[0]
+    image_url = data.get('imageURL')
+    print(image_url)
+
+#print(response.json())
