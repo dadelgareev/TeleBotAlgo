@@ -109,10 +109,17 @@ async def play_rpc(update: Update, context):
     await update.message.reply_text("Начинаем игру в цуэ-фа!", reply_markup=rps_keyboard)
 
 async def generate_image(update: Update, context: CallbackContext):
-    image = Image.new('RGB', (200, 200), color='white')
-    draw = ImageDraw.Draw(image)
-    draw.ellipse((40, 10, 160, 125), outline='black', width = 5)
+    if not context.args:
+        await update.message.reply_text("Вы должны ввести команду в формате /generate_image <цвет>")
+        return
 
+    color = context.args[0]
+
+    image = Image.new('RGB', (200, 200), color=(255, 255, 255))
+    draw = ImageDraw.Draw(image)
+    draw.ellipse((40, 10, 160, 125), outline=color, width = 5)
+    draw.line((0,200,70,115), fill=color, width=5)
+    draw.line((200,200,130,115), fill=color, width=5)
 
     image.save("white_image.jpg")
     await update.message.reply_photo(open("white_image.jpg", "rb"))
