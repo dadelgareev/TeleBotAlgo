@@ -9,7 +9,7 @@ headers = {
     'Authorization': 'Bearer ' + API_KEY
 }
 
-task_uuid = uuid.uuid4()
+task_uuid = str(uuid.uuid4())
 
 payload = [
     {
@@ -22,3 +22,6 @@ payload = [
         "numberResults": 1
     }
 ]
+
+response = requests.post(URL, headers=headers, json=payload)
+print(response.json())
