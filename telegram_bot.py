@@ -125,6 +125,13 @@ async def generate_image(update: Update, context: CallbackContext):
     await update.message.reply_photo(open("white_image.jpg", "rb"))
     #await update.message.reply_text("Изображение создалили и сохранили!")
 
+async def generate_image_ai(update: Update, context: CallbackContext):
+    if not context.args:
+        await update.message.reply_text(f"Пишите команду - /generate_image_ai <текстовый промпт>")
+        return
+    prompt = ' '.join(context.args)
+    await update.message.reply_text(prompt)
+
 async def button_callback(update: Update, context):
     query = update.callback_query
     await query.answer("SOS нажали на кнопку")
@@ -179,6 +186,7 @@ def main():
     application.add_handler(CallbackQueryHandler(button_callback))
     application.add_handler(CommandHandler("play_rpc", play_rpc))
     application.add_handler(CommandHandler("generate_image", generate_image))
+    application.add_handler(CommandHandler("generate_image_ai", generate_image_ai))
     print("Бот запущен")
     application.run_polling()
 
