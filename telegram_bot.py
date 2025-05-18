@@ -148,7 +148,7 @@ async def generate_image_ai(update: Update, context: CallbackContext):
             "positivePrompt": f"{prompt}",
             "width": 512,
             "height": 512,
-            "model": "runware:100@1",
+            "model": "civitai:139562@798204",
             "numberResults": 2,
             "outputFormat": "PNG"
         }
@@ -169,10 +169,10 @@ async def generate_image_ai(update: Update, context: CallbackContext):
         await update.message.reply_text("Изображение не получилось скачать!")
 
 async def edit_image_ai(update: Update, context: CallbackContext):
-    if not context.args:
+    if not update.message.caption:
         await update.message.reply_text(f"Пишите команду - картинка + <текстовый промпт>")
         return
-    prompt = ' '.join(context.args)
+    prompt = ' '.join(update.message.caption)
     #await update.message.reply_text(prompt)
 
     photo = update.message.photo[-1]
