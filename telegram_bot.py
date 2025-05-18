@@ -149,7 +149,7 @@ async def generate_image_ai(update: Update, context: CallbackContext):
             "width": 512,
             "height": 512,
             "model": "runware:100@1",
-            "numberResults": 1,
+            "numberResults": 2,
             "outputFormat": "PNG"
         }
     ]
@@ -157,12 +157,13 @@ async def generate_image_ai(update: Update, context: CallbackContext):
     image_url = None
 
     main_response = requests.post(URL_AI, json = payload, headers=headers)
-
+    print(main_response.json())
     if "data" in main_response.json():
-        data = main_response.json().get('data')[0]
-        image_url = data.get('imageURL')
-        await update.message.reply_photo(image_url, caption = prompt)
-        print(image_url)
+        data = main_response.json().get('data')
+        for item in data:
+            image_url = item.get('imageURL')
+            await update.message.reply_photo(image_url, caption = prompt)
+            print(image_url)
 
     if not image_url:
         await update.message.reply_text("Изображение не получилось скачать!")
