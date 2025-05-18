@@ -168,6 +168,49 @@ async def generate_image_ai(update: Update, context: CallbackContext):
     if not image_url:
         await update.message.reply_text("Изображение не получилось скачать!")
 
+async def edit_image_ai(update: Update, context: CallbackContext):
+    if not context.args:
+        await update.message.reply_text(f"Пишите команду - картинка + <текстовый промпт>")
+        return
+    prompt = ' '.join(context.args)
+    #await update.message.reply_text(prompt)
+
+    photo = update.message.photo[-1]
+    photo_object = await photo.get_file()
+    url = photo_object.file_path
+    print(url)
+    headers = {'Content-Type': 'application/json',
+               'Authorization': f'Bearer {RUNWARE_API_KEY}'}
+
+    task_uuid = str(uuid.uuid4())
+
+    payload = [
+        {
+            "taskType": "photoMaker",
+            "taskUUID": task_uuid,
+            "inputImages": [url],
+            "positivePrompt": prompt,
+            "height": 512,
+            "width": 512,
+            "steps": 20,
+            "CFGScale": 7.5,
+            "numberResults": 1
+        }
+    ]
+
+    image_url = None
+
+    main_response = requests.post(URL_AI, json = payload, headers=headers)
+    print(main_response.json())
+    if "data" in main_response.json():
+        data = main_response.json().get('data')
+        for item in data:
+            image_url = item.get('imageURL')
+            await update.message.reply_photo(image_url, caption = prompt)
+            print(image_url)
+
+    if not image_url:
+        await update.message.reply_text("Изображение не получилось скачать!")
 
 
 
@@ -226,6 +269,7 @@ def main():
     application.add_handler(CommandHandler("play_rpc", play_rpc))
     application.add_handler(CommandHandler("generate_image", generate_image))
     application.add_handler(CommandHandler("generate_image_ai", generate_image_ai))
+    application.add_handler(MessageHandler(filters.PHOTO, edit_image_ai))
     print("Бот запущен")
     application.run_polling()
 
