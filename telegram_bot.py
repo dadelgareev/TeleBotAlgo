@@ -33,6 +33,7 @@ with open("config.json", "r") as f:
     config = json.load(f)
     BOT_TOKEN = config["BOT_KEY"]
     WEATHER_API_KEY = config["WEATHER_API_KEY"]
+    RUNWARE_API_KEY = config["RUNWARE_API_KEY"]
 
 # Функция стартового сообщения
 async def start(update: Update, context):
@@ -125,12 +126,45 @@ async def generate_image(update: Update, context: CallbackContext):
     await update.message.reply_photo(open("white_image.jpg", "rb"))
     #await update.message.reply_text("Изображение создалили и сохранили!")
 
+URL_AI = 'https://api.runware.ai/v1'
+
 async def generate_image_ai(update: Update, context: CallbackContext):
     if not context.args:
         await update.message.reply_text(f"Пишите команду - /generate_image_ai <текстовый промпт>")
         return
     prompt = ' '.join(context.args)
-    await update.message.reply_text(prompt)
+    #await update.message.reply_text(prompt)
+
+    headers = {'Content-Type': 'application/json',
+               'Authorization': f'Bearer {RUNWARE_API_KEY}'}
+
+    task_uuid = str(uuid.uuid4())
+
+    payload = [
+        {
+            "taskType": "imageInference",
+            "taskUUID": task_uuid,
+            "positivePrompt": f"{prompt}",
+            "width": 512,
+            "height": 512,
+            "model": "runware:100@1",
+            "numberResults": 1,
+            "outputFormat": "PNG"
+        }
+    ]
+
+    try:
+        main_response = requests.post(URL_AI, payload, headers=headers)
+
+        if "data" in main_response.json():
+            data = main_response.json().get('data')[0]
+            image_url = data.get('imageURL')
+            print(image_url)
+
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка: {e}")
+
+
 
 async def button_callback(update: Update, context):
     query = update.callback_query
