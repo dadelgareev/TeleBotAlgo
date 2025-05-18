@@ -153,20 +153,20 @@ async def generate_image_ai(update: Update, context: CallbackContext):
             "outputFormat": "PNG"
         }
     ]
+
     image_url = None
-    try:
-        main_response = requests.post(URL_AI, payload, headers=headers)
 
-        if "data" in main_response.json():
-            data = main_response.json().get('data')[0]
-            image_url = data.get('imageURL')
-            await update.message.reply_text(image_url)
-            print(image_url)
+    main_response = requests.post(URL_AI, json = payload, headers=headers)
 
-        if not image_url:
-            await update.message.reply_text("Изображение не получилось скачать!")
-    except Exception as e:
-        await update.message.reply_text(f"Ошибка: {e}")
+    if "data" in main_response.json():
+        data = main_response.json().get('data')[0]
+        image_url = data.get('imageURL')
+        await update.message.reply_photo(image_url, caption = prompt)
+        print(image_url)
+
+    if not image_url:
+        await update.message.reply_text("Изображение не получилось скачать!")
+
 
 
 
