@@ -233,6 +233,59 @@ async def generate_image_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Ошибка при генерации изображения: {e}")
 
+async def edit_image_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if not update.message.caption:
+        await update.message.reply_text("Вы должны добавить подпись к фото с описанием запроса!")
+        return
+
+    prompt = update.message.caption  # Получаем подпись целиком
+    photo = update.message.photo[-1]  # Берем фото с наибольшим разрешением
+    file = await context.bot.get_file(photo.file_id)
+
+    image_data = await file.download_as_bytearray()
+    import base64
+    image_base64 = base64.b64encode(image_data).decode('utf-8')
+
+    task_uuid = str(uuid.uuid4())
+
+    payload = [
+        {
+            "taskType": "photoMaker",
+            "taskUUID": task_uuid,
+            "width": 1024,
+            "height": 1024,
+            "numberResults": 1,
+            "outputFormat": "JPEG",
+            "steps": 20,
+            "CFGScale": 7.5,
+            "positivePrompt": prompt,
+            "model": "civitai:139562@798204",
+            "inputImages": [f"data:image/jpeg;base64,{image_base64}"]  # Добавляем изображение в base64
+        }
+    ]
+
+    headers = {
+        "Authorization": f"Bearer {RUNWARE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    main_response = requests.post(RUNWARE_API_URL, json=payload, headers=headers)
+    if main_response.status_code == 200:
+        data = main_response.json()
+        if "data" in data:
+            response_info = data.get("data", [])[0]
+            image_url = response_info["imageURL"]
+            image_response = requests.get(image_url)
+            if image_response.status_code == 200:
+                await update.message.reply_photo(photo = image_response.content)
+    else:
+        print(main_response.status_code, main_response.text)
+
+
+
+
+
 # Главная функция для запуска бота
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
@@ -244,6 +297,7 @@ def main():
     application.add_handler(CommandHandler("rps_game", rps_game))
     application.add_handler(CommandHandler("generate_image", generate_image))
     application.add_handler(CommandHandler("generate_image_ai", generate_image_ai))
+    application.add_handler(MessageHandler(filters.PHOTO, edit_image_ai))
     application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
     application.run_polling()
