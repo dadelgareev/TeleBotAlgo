@@ -148,7 +148,7 @@ async def generate_image_ai(update: Update, context: CallbackContext):
             "positivePrompt": f"{prompt}",
             "width": 512,
             "height": 512,
-            "model": "civitai:139562@798204",
+            "model": "runware:100@1",
             "numberResults": 2,
             "outputFormat": "PNG"
         }
@@ -194,7 +194,8 @@ async def edit_image_ai(update: Update, context: CallbackContext):
             "width": 512,
             "steps": 20,
             "CFGScale": 7.5,
-            "numberResults": 1
+            "numberResults": 1,
+            "model": "civitai:139562@798204"
         }
     ]
 
