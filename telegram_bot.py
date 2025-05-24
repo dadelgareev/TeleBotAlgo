@@ -1,14 +1,20 @@
 import asyncio
+import random
 import uuid
+from collections import Counter
 from io import BytesIO
 from random import randint, choice
 
 from PIL import ImageFont, ImageDraw, Image
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler, \
+    CallbackContext
 import requests
 import json
 
+bot_responses = {}
+
+GROUP_ID = "-4949707972"
 
 # Получаем ключ weather api и ключ telegram бота
 with open("config.json", "r") as f:
@@ -45,7 +51,31 @@ async def start(update: Update, context):
 async def echo(update: Update, context):
     word_user = update.message.text
     word_reserve = word_user[::-1]
-    await update.message.reply_text(f'Ты написал: {word_reserve}')
+    name = update.effective_user.name
+    await update.message.reply_text(f'Ты написал: {word_reserve}, отправителель: {name}')
+    #await update.message.delete()
+    chat = update.effective_chat
+    chat_info = f"""
+    Chat ID: {chat.id}
+    Title: {chat.title or "—"}
+    First name: {chat.first_name or update.message.from_user.first_name or "-"}
+    Last name: {chat.last_name or "—" or update.message.from_user.last_name or "-"}
+    Username: @{chat.username or update.message.from_user.username or "—"}
+    Type: {chat.type}
+    Дата сообщения: {update.message.date}
+        """.strip()
+
+    await update.message.reply_text(chat_info)
+async def send_message_to_group(update: Update, context: CallbackContext):
+    if not context.args:
+        await update.message.reply_text("Укажите сообщение для письма")
+        return
+
+    message_text = ' '.join(context.args)
+    await context.bot.send_message(
+        chat_id=GROUP_ID,
+        text=message_text
+    )
 
 # Угадай число
 async def guess_number(update: Update, context):
@@ -297,6 +327,7 @@ def main():
     application.add_handler(CommandHandler("rps_game", rps_game))
     application.add_handler(CommandHandler("generate_image", generate_image))
     application.add_handler(CommandHandler("generate_image_ai", generate_image_ai))
+    application.add_handler(CommandHandler("send_message_to_group", send_message_to_group))
     application.add_handler(MessageHandler(filters.PHOTO, edit_image_ai))
     application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
