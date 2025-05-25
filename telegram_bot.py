@@ -314,7 +314,17 @@ async def edit_image_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    question = "Какой ваш любимый цвет?"
+    options = ["🔴 Красный", "🟢 Зелёный", "🔵 Синий"]
 
+    await context.bot.send_poll(
+        chat_id=update.effective_chat.id,
+        question=question,
+        options=options,
+        is_anonymous=False,  # Если хочешь знать, кто голосовал
+        allows_multiple_answers=False,  # Разрешить один ответ
+    )
 
 # Главная функция для запуска бота
 def main():
@@ -329,6 +339,7 @@ def main():
     application.add_handler(CommandHandler("generate_image_ai", generate_image_ai))
     application.add_handler(CommandHandler("send_message_to_group", send_message_to_group))
     application.add_handler(MessageHandler(filters.PHOTO, edit_image_ai))
+    application.add_handler(CommandHandler("poll", poll))
     application.add_handler(CallbackQueryHandler(button_callback))
     print("Бот запущен")
     application.run_polling()
